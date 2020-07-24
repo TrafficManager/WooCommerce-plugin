@@ -45,7 +45,7 @@ class TrafficManagerPlugin_Integration extends WC_Integration {
 	public function set_cookie()
     {
         $ttl = isset($this->settings['cookie_ttl']) ? $this->settings['cookie_ttl'] : self::DEFAULT_TTL;
-        echo '<script>!function(){var e=new URL(window.location.href).searchParams.get("tmclk");if(e&&e.match(/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}/)){var t=new Date;t.setTime(t.getTime()+1e3*'.$ttl.'),document.cookie="tm_clickid="+e+"; expires="+t.toGMTString()}}();</script>';
+        echo '<script>!function(){var e=new URL(window.location.href).searchParams.get("tmclk");if(e&&e.match(/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}/)){var t=new Date;t.setTime(t.getTime()+1e3*'.$ttl.'),document.cookie="tm_clickid="+e+";path=/;expires="+t.toGMTString()}}();</script>';
     }
 
 	function add_cookie_to_order( $order_id ){
