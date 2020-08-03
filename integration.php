@@ -206,6 +206,11 @@ class TrafficManagerPlugin_Integration extends WC_Integration {
 		try {
 			$order = new WC_Order( $orderId );
 
+			if(!$order->get_meta('tm_clickid')) {
+			    // This order has no clickid, don't send the postback
+			    return;
+			}
+
 			// Build the url
 			$url = $this->settings['postbackUrl'];
 			$url = str_replace('{clickid}', $order->get_meta('tm_clickid'), $url);
