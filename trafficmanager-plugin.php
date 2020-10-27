@@ -3,7 +3,7 @@
 Plugin Name: TrafficManager WC
 Plugin URI: https://www.trafficmanager.com/woocommerce-plugin/
 Description: Official integration plugin between WooCommerce and the TrafficManager tracking platform.
-Version: 1.1.7
+Version: 1.1.8
 Author: Traffic Manager Limited
 Author URI: https://www.trafficmanager.com/
 License: GPL3
@@ -96,9 +96,8 @@ class TrafficManagerPlugin {
 	 */
 	function plugin_action_links( $links ) {
 
-		//$links[] = '<a href="https://wordpress.org/plugins/woocommerce-conversion-tracking/#installation" target="_blank">' . __( 'Installation', 'trafficmanager-plugin' ) . '</a>';
 		$links[] = '<a href="https://www.trafficmanager.com/woocommerce-plugin/" target="_blank">' . __( 'Help', 'trafficmanager-plugin' ) . '</a>';
-		$links[] = '<a href="' . admin_url( 'admin.php?page=wc-settings&tab=integration' ) . '">' . __( 'Settings', 'trafficmanager-plugin' ) . '</a>';
+		$links[] = '<a href="' . admin_url( 'admin.php?page=wc-settings&tab=integration&section=trafficmanager-plugin' ) . '">' . __( 'Settings', 'trafficmanager-plugin' ) . '</a>';
 
 		return $links;
 	}
