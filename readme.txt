@@ -1,4 +1,4 @@
-=== TrafficManager WC Plugin ===
+=== TrafficManager WC ===
 Contributors: trafficmanager
 Tags: trafficmanager, trafficmanager.com, woocommerce, postback, affiliate postback
 Requires at least: 4.7

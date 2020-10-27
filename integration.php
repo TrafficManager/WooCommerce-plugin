@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Class TrafficManagerPlugin_Integration
+ * Class TrafficManagerWc_Integration
  *
- * Version: 1.1.6
+ * Version: 1.1.7
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
-class TrafficManagerPlugin_Integration extends WC_Integration {
+class TrafficManagerWc_Integration extends WC_Integration {
 
 	/**
 	 * Default tracking cookie TTL
@@ -181,10 +181,10 @@ class TrafficManagerPlugin_Integration extends WC_Integration {
 
         if(!isset($this->settings['networkName']) || !$this->settings['networkName'])
         {
-            echo '<div class="notice notice-warning"><p>'.__( 'The plugin is not active. Insert your user ID and API key to enable the plugin.', 'trafficmanager-plugin' ).'</p></div>';
+            echo '<div class="notice notice-warning"><p>'.__( 'The TrafficManager plugin is not active. Insert your user ID and API key to enable the plugin.', 'trafficmanager-plugin' ).'</p></div>';
         }
         else {
-	        echo '<div class="notice notice-success"><p>'.__( 'The plugin is active. Completed sales are sent to the '.$this->settings['networkName'].' tracking platform.', 'trafficmanager-plugin' ).'</p></div>';
+	        echo '<div class="notice notice-success"><p>'.__( 'The TrafficManager plugin is active. Completed sales are sent to the '.$this->settings['networkName'].' tracking platform.', 'trafficmanager-plugin' ).'</p></div>';
         ?>
             <tr valign="top">
                 <th scope="row" class="titledesc"><?= __( 'Network name', 'trafficmanager-plugin' ) ?></th>
