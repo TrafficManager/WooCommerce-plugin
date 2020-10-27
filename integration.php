@@ -76,20 +76,26 @@ class TrafficManagerPlugin_Integration extends WC_Integration {
 
 		if($this->settings['api_key'] && $this->settings['user_id']) {
 		    // Get the postback URL from the TrafficManager API
-            $ch = curl_init("https://api.trafficmanager.com/v1/getPostbackUrl/");
-			curl_setopt($ch, CURLOPT_HTTPHEADER, [
-				'X-User-ID: ' . $this->settings['user_id'],
-				'X-Api-Key: ' . $this->settings['api_key']
-			]);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_CAINFO, __DIR__ . '/cacert.pem');
-			$apiResponse = json_decode(curl_exec($ch), true);
-			if(curl_errno($ch)) {
-				WC_Admin_Settings::add_error( 'curl error: ' . curl_error( $ch ) );
+			$args = [
+				'headers' => [
+					'X-User-ID' => $this->settings['user_id'],
+					'X-Api-Key' => $this->settings['api_key']
+				]
+			];
+			$response = wp_remote_get( 'https://api.trafficmanager.com/v1/getPostbackUrl/', $args );
+
+			if(is_wp_error($response)) {
+				WC_Admin_Settings::add_error( 'Unexpected error occurred. Please try again later or contact the TrafficManager support.' );
 			} else {
-			    $this->settings['networkName'] = $apiResponse['networkName'];
-			    $this->settings['username'] = $apiResponse['username'];
-			    $this->settings['postbackUrl'] = $apiResponse['postbackUrl'];
+				$body     = wp_remote_retrieve_body( $response );
+				$apiResponse = json_decode($body, true);
+				if(isset($apiResponse['status']) && $apiResponse['status'] == 200) {
+					$this->settings['networkName'] = $apiResponse['networkName'];
+					$this->settings['username']    = $apiResponse['username'];
+					$this->settings['postbackUrl'] = $apiResponse['postbackUrl'];
+				} else {
+				    WC_Admin_Settings::add_error( 'Error occurred: ' . ($apiResponse['message'] ?? 'unknown error') );
+                }
             }
         } else {
 			$this->settings['networkName'] = '';
