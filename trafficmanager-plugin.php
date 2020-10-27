@@ -31,28 +31,28 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.html
  */
 
 // don't call the file directly
-if ( !defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 
 class TrafficManagerPlugin {
 
-    /**
-     * Start up
-     */
-    public function __construct()
-    {
-        // WooCommerce plugin must be active
-	    if ( !in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
-		    return;
-	    }
+	/**
+	 * Start up
+	 */
+	public function __construct() {
+		// WooCommerce plugin must be active
+		if ( ! in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
+			return;
+		}
 
-	    // Register WooCommerce integrations
-	    add_filter( 'woocommerce_integrations', array($this, 'register_integration') );
+		// Register WooCommerce integrations
+		add_filter( 'woocommerce_integrations', array( $this, 'register_integration' ) );
 
-	    // Plugin links
-	    add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
-    }
-
+		// Plugin links
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
+	}
 
 
 	/**
@@ -64,7 +64,7 @@ class TrafficManagerPlugin {
 	public static function init() {
 		static $instance = false;
 
-		if ( !$instance ) {
+		if ( ! $instance ) {
 			$instance = new TrafficManagerPlugin();
 		}
 
@@ -75,6 +75,7 @@ class TrafficManagerPlugin {
 	 * Register integration with WooCommerce
 	 *
 	 * @param array $integrations
+	 *
 	 * @return array
 	 */
 	function register_integration( $integrations ) {
@@ -89,7 +90,7 @@ class TrafficManagerPlugin {
 	/**
 	 * Plugin action links
 	 *
-	 * @param  array $links
+	 * @param array $links
 	 *
 	 * @return array
 	 */
