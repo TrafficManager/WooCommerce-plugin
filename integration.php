@@ -52,7 +52,8 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 	function add_cookie_to_order( $order_id ) {
 		if ( isset( $_COOKIE['tm_clickid'] ) && preg_match( '/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}$/', $_COOKIE['tm_clickid'] ) ) {
-			update_post_meta( $order_id, 'tm_clickid', $_COOKIE['tm_clickid'] );
+			$tm_clickid = sanitize_text_field( $_COOKIE['tm_clickid'] );
+			update_post_meta( $order_id, 'tm_clickid', $tm_clickid );
 		}
 	}
 
