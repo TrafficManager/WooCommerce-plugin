@@ -231,21 +231,12 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			$url = str_replace( '{amount}', $order->get_subtotal(), $url );
 
 			// Send the postback
-			$ch = curl_init();
-			curl_setopt( $ch, CURLOPT_URL, $url );
-			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-			curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; TrafficManager WooCommerce plugin postback/1.0; TrafficManager.com tracking software)' );
-			curl_setopt( $ch, CURLOPT_REFERER, get_site_url() );
-			curl_setopt( $ch, CURLOPT_CAINFO, __DIR__ . '/cacert.pem' );
-			$response = curl_exec( $ch );
-
-			if ( $response === false ) {
-				error_log( 'TrafficManager postback failed: ' . $url . ' - ' . curl_error( $ch ) );
+			$response = wp_remote_get( $url );
+			if ( is_wp_error( $response ) ) {
+				error_log( 'TrafficManager postback failed: ' . $url );
 			} elseif ( 'OK' !== $response ) {
-				error_log( 'TrafficManager postback not valid: ' . $url . ' - ' . $response );
+				error_log( 'TrafficManager postback not valid: ' . $url );
 			}
-
-			curl_close( $ch );
 
 		} catch ( Exception $ex ) {
 			error_log( $ex->getMessage() );
