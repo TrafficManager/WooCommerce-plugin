@@ -232,7 +232,6 @@ class TrafficManagerWc_Integration extends WC_Integration {
      * @param $orderId
      */
     public function action_woocommerce_order_status_changed($orderId) {
-        error_log("Status changed for: " . $orderId);
         $order = new WC_Order( $orderId );
         $this->sendPostback($orderId, $order->get_status());
     }
@@ -243,7 +242,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
      * @param $orderId
      */
     public function action_woocommerce_new_order( $orderId ) {
-        $this->sendPostback($orderId, 'new');
+        $this->sendPostback($orderId, 'new_order');
     }
 
 
@@ -252,12 +251,12 @@ class TrafficManagerWc_Integration extends WC_Integration {
             return;
         }
 
-        if ($status == 'new' && isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
+        if ($status == 'new_order' && isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
             $this->postback($orderId, $status);
         }
 
         if (isset($this->settings['order_status'])) {
-            if ($status == $this->settings['order_status']){
+            if ('wc-' . $status == $this->settings['order_status']){
                 $this->postback($orderId, $status);
             }
         }
