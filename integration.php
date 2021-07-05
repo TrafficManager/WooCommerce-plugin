@@ -33,43 +33,17 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 		add_action( 'wp_footer', array( $this, 'set_cookie' ) );
 
-		// Send the postback when the order is confirmed
-		add_action( 'woocommerce_order_status_completed', array(
-			$this,
-			'action_woocommerce_order_status_completed'
-		), 10, 1 );
-
-
         // Send the postback when the order is received
         add_action( 'woocommerce_new_order', array(
             $this,
             'action_woocommerce_new_order'
         ), 10, 1 );
 
-        add_action( 'woocommerce_order_status_pending', array(
+        add_action( 'woocommerce_order_status_changed', array(
             $this,
-            'action_woocommerce_order_status_pending'
+            'action_woocommerce_order_status_changed',
         ), 10, 1 );
-        add_action( 'woocommerce_order_status_processing', array(
-            $this,
-            'action_woocommerce_order_status_processing'
-        ), 10, 1 );
-        add_action( 'woocommerce_order_status_on-hold', array(
-            $this,
-            'action_woocommerce_order_status_on_hold'
-        ), 10, 1 );
-        add_action( 'woocommerce_order_status_cancelled', array(
-            $this,
-            'action_woocommerce_order_status_cancelled'
-        ), 10, 1 );
-        add_action( 'woocommerce_order_status_refunded', array(
-            $this,
-            'action_woocommerce_order_status_refunded'
-        ), 10, 1 );
-        add_action( 'woocommerce_order_status_failed', array(
-            $this,
-            'action_woocommerce_order_status_failed'
-        ), 10, 1 );
+
 
 		// Check cookie when the order is made
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'add_cookie_to_order' ) );
@@ -147,6 +121,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
 	 * Initialize integration settings form fields.
 	 */
 	public function init_form_fields() {
+
 		$this->form_fields = array(
 			'user_id'    => array(
 				'title'       => __( 'Your user ID', 'trafficmanager-plugin' ),
@@ -191,15 +166,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
                 'title'       => __( 'Send conversion postback when the order status changes to:', 'trafficmanager-plugin' ),
                 'type'        => 'select',
                 'default'     => self::DEFAULT_STATUS,
-                'options'     => [
-                    'wc-completed'  => 'Conversion',
-                    'wc-pending'    => 'Pending conversion',
-                    'wc-processing' => 'Processing',
-                    'wc-on-hold'    => 'On hold',
-                    'wc-cancelled'  => 'Cancelled',
-                    'wc-refunded'   => 'Refunded',
-                    'wc-failed'     => 'Failed'
-                ]
+                'options'     => wc_get_order_statuses()
             ),
 
 			'info' => array(
@@ -258,14 +225,17 @@ class TrafficManagerWc_Integration extends WC_Integration {
 		return ob_get_clean();
 	}
 
-	/**
-	 * Sends the S2S postback
-	 *
-	 * @param $orderId
-	 */
-	public function action_woocommerce_order_status_completed( $orderId ) {
-        $this->sendPostback($orderId, 'wc-completed');
-	}
+
+    /**
+     * Sends the S2S postback
+     *
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_changed($orderId) {
+        error_log("Status changed for: " . $orderId);
+        $order = new WC_Order( $orderId );
+        $this->sendPostback($orderId, $order->get_status());
+    }
 
     /**
      * Sends the S2S postback
@@ -276,47 +246,6 @@ class TrafficManagerWc_Integration extends WC_Integration {
         $this->sendPostback($orderId, 'new');
     }
 
-    /**
-     * @param $orderId
-     */
-    public function action_woocommerce_order_status_pending( $orderId ) {
-        $this->sendPostback($orderId, 'wc-pending');
-    }
-
-    /**
-     * @param $orderId
-     */
-    public function action_woocommerce_order_status_processing( $orderId ) {
-        $this->sendPostback($orderId, 'wc-processing');
-    }
-
-    /**
-     * @param $orderId
-     */
-    public function action_woocommerce_order_status_on_hold( $orderId ) {
-        $this->sendPostback($orderId, 'wc-on-hold');
-    }
-
-    /**
-     * @param $orderId
-     */
-    public function action_woocommerce_order_status_cancelled( $orderId ) {
-        $this->sendPostback($orderId, 'wc-cancelled');
-    }
-
-    /**
-     * @param $orderId
-     */
-    public function action_woocommerce_order_status_refunded( $orderId ) {
-        $this->sendPostback($orderId, 'wc-refunded');
-    }
-
-    /**
-     * @param $orderId
-     */
-    public function action_woocommerce_order_status_failed( $orderId ) {
-        $this->sendPostback($orderId, 'wc-failed');
-    }
 
     private function sendPostback($orderId, $status) {
         if (!isset( $this->settings['postbackUrl'] ) ) {
