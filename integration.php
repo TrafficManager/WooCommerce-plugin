@@ -39,10 +39,36 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			'action_woocommerce_order_status_completed'
 		), 10, 1 );
 
+
         // Send the postback when the order is received
         add_action( 'woocommerce_new_order', array(
             $this,
             'action_woocommerce_new_order'
+        ), 10, 1 );
+
+        add_action( 'woocommerce_order_status_pending', array(
+            $this,
+            'action_woocommerce_order_status_pending'
+        ), 10, 1 );
+        add_action( 'woocommerce_order_status_processing', array(
+            $this,
+            'action_woocommerce_order_status_processing'
+        ), 10, 1 );
+        add_action( 'woocommerce_order_status_on-hold', array(
+            $this,
+            'action_woocommerce_order_status_on_hold'
+        ), 10, 1 );
+        add_action( 'woocommerce_order_status_cancelled', array(
+            $this,
+            'action_woocommerce_order_status_cancelled'
+        ), 10, 1 );
+        add_action( 'woocommerce_order_status_refunded', array(
+            $this,
+            'action_woocommerce_order_status_refunded'
+        ), 10, 1 );
+        add_action( 'woocommerce_order_status_failed', array(
+            $this,
+            'action_woocommerce_order_status_failed'
         ), 10, 1 );
 
 		// Check cookie when the order is made
@@ -92,19 +118,17 @@ class TrafficManagerWc_Integration extends WC_Integration {
 					'X-Api-Key' => $this->settings['api_key']
 				]
 			];
-			//$response = wp_remote_get( 'https://api.trafficmanager.com/v1/getPostbackUrl/', $args );
+			$response = wp_remote_get( 'https://api.trafficmanager.com/v1/getPostbackUrl/', $args );
 
-            //is_wp_error( $response )
-			if ( false ) {
+			if ( is_wp_error( $response ) ) {
 				WC_Admin_Settings::add_error( 'Unexpected error occurred. Please try again later or contact the TrafficManager support.' );
 			} else {
-				//$body        = wp_remote_retrieve_body( $response );
-				//$apiResponse = json_decode( $body, true );
-                //isset( $apiResponse['status'] ) && $apiResponse['status'] == 200
-				if ( true ) {
-					$this->settings['networkName'] = "TrafficManager";//$apiResponse['networkName'];
-					$this->settings['username']    = "Francesco";//$apiResponse['username'];
-					$this->settings['postbackUrl'] = "https:\/\/local-postback.trafficmanager.dev\/?clickid={clickid}&transaction_id={transaction_id}&amount={amount}&key=461896763a0197e3dbcfdaf4c2efbd62f374565e";//$apiResponse['postbackUrl'];
+				$body        = wp_remote_retrieve_body( $response );
+				$apiResponse = json_decode( $body, true );
+				if ( isset( $apiResponse['status'] ) && $apiResponse['status'] == 200 ) {
+					$this->settings['networkName'] = $apiResponse['networkName'];
+					$this->settings['username']    = $apiResponse['username'];
+					$this->settings['postbackUrl'] = $apiResponse['postbackUrl'];
 				} else {
 					WC_Admin_Settings::add_error( 'Error occurred: ' . ( $apiResponse['message'] ?? 'unknown error' ) );
 				}
@@ -235,63 +259,91 @@ class TrafficManagerWc_Integration extends WC_Integration {
 	}
 
 	/**
-	 * Sends the S2S postback when the order is completed
+	 * Sends the S2S postback
 	 *
 	 * @param $orderId
 	 */
 	public function action_woocommerce_order_status_completed( $orderId ) {
-
-	    // if drowdown == completed
-        error_log( "Order complete");
-		if ( ! isset( $this->settings['postbackUrl'] ) ) {
-			return;
-		}
-
-		try {
-			$order = new WC_Order( $orderId );
-
-			if ( ! $order->get_meta( 'tm_clickid' ) ) {
-				// This order has no clickid, don't send the postback
-				return;
-			}
-
-			// Build the url
-			$url = $this->settings['postbackUrl'];
-			$url = str_replace( '{clickid}', $order->get_meta( 'tm_clickid' ), $url );
-			$url = str_replace( '{transaction_id}', $orderId, $url );
-			$url = str_replace( '{amount}', $order->get_subtotal(), $url );
-			//todo: if the checkbox is on, add &approve=1
-
-			// Send the postback
-			$response = wp_remote_get( $url );
-			if ( is_wp_error( $response ) ) {
-				error_log( 'TrafficManager postback failed: ' . $url );
-			} elseif ( 'OK' !== $response ) {
-				error_log( 'TrafficManager postback not valid: ' . $url );
-			}
-
-		} catch ( Exception $ex ) {
-			error_log( $ex->getMessage() );
-		}
+        $this->sendPostback($orderId, 'wc-completed');
 	}
 
     /**
-     * Sends the S2S postback when the order is received
+     * Sends the S2S postback
      *
      * @param $orderId
      */
     public function action_woocommerce_new_order( $orderId ) {
-        // if the checkbox is selected:
-        error_log( "Order received");
-        if ( ! isset( $this->settings['postbackUrl'] ) ) {
+        $this->sendPostback($orderId, 'new');
+    }
+
+    /**
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_pending( $orderId ) {
+        $this->sendPostback($orderId, 'wc-pending');
+    }
+
+    /**
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_processing( $orderId ) {
+        $this->sendPostback($orderId, 'wc-processing');
+    }
+
+    /**
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_on_hold( $orderId ) {
+        $this->sendPostback($orderId, 'wc-on-hold');
+    }
+
+    /**
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_cancelled( $orderId ) {
+        $this->sendPostback($orderId, 'wc-cancelled');
+    }
+
+    /**
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_refunded( $orderId ) {
+        $this->sendPostback($orderId, 'wc-refunded');
+    }
+
+    /**
+     * @param $orderId
+     */
+    public function action_woocommerce_order_status_failed( $orderId ) {
+        $this->sendPostback($orderId, 'wc-failed');
+    }
+
+    private function sendPostback($orderId, $status) {
+        if (!isset( $this->settings['postbackUrl'] ) ) {
             return;
         }
 
+        if ($status == 'new' && isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
+            $this->postback($orderId, $status);
+        }
+
+        if (isset($this->settings['order_status'])) {
+            if ($status == $this->settings['order_status']){
+                $this->postback($orderId, $status);
+            }
+        }
+    }
+
+    private function postback($orderId, $status) {
         try {
+            if ($status == 'new') {
+                $this->add_cookie_to_order($orderId);
+            }
             $order = new WC_Order( $orderId );
 
             if ( ! $order->get_meta( 'tm_clickid' ) ) {
                 // This order has no clickid, don't send the postback
+                error_log( "No clickId");
                 return;
             }
 
@@ -300,6 +352,10 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $url = str_replace( '{clickid}', $order->get_meta( 'tm_clickid' ), $url );
             $url = str_replace( '{transaction_id}', $orderId, $url );
             $url = str_replace( '{amount}', $order->get_subtotal(), $url );
+
+            if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes' && $status != 'new') {
+                $url .= '&approve=1';
+            }
 
             // Send the postback
             $response = wp_remote_get( $url );
