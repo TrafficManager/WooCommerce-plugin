@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.1
+ * Version: 1.2.2
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -14,6 +14,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
 	 */
 	const DEFAULT_TTL = 259200;
 	const DEFAULT_STATUS = 'wc-completed';
+    const DEFAULT_CANCEL_STATUS = '';
 
 
 	function __construct() {
@@ -169,6 +170,13 @@ class TrafficManagerWc_Integration extends WC_Integration {
                 'options'     => wc_get_order_statuses()
             ),
 
+            'send_canceled_conv' => array(
+                'title'       => __( 'Send canceled conversion when the order status changes to:', 'trafficmanager-plugin' ),
+                'type'        => 'select',
+                'default'     => self::DEFAULT_CANCEL_STATUS,
+                'options'     => array_merge(["" => "Select an option"] , wc_get_order_statuses())
+            ),
+
 			'info' => array(
 				//'title'             => __( 'TrafficManager network info', 'trafficmanager-plugin' ),
 				'type' => 'network_info',
@@ -255,6 +263,10 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $this->postback($orderId, $status);
         }
 
+        if (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
+            $this->postback($orderId, $status);
+        }
+
         if (isset($this->settings['order_status'])) {
             if ('wc-' . $status == $this->settings['order_status']){
                 $this->postback($orderId, $status);
@@ -264,7 +276,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
     private function postback($orderId, $status) {
         try {
-            if ($status == 'new') {
+            if ($status == 'new_order') {
                 $this->add_cookie_to_order($orderId);
             }
             $order = new WC_Order( $orderId );
@@ -281,8 +293,12 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $url = str_replace( '{transaction_id}', $orderId, $url );
             $url = str_replace( '{amount}', $order->get_subtotal(), $url );
 
-            if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes' && $status != 'new') {
+            if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes' && $status != 'new_order') {
                 $url .= '&approve=1';
+            }
+
+            if (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
+                $url .= '&approve=0';
             }
 
             // Send the postback
