@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.2
+ * Version: 1.2.3
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -280,6 +280,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
                 $this->add_cookie_to_order($orderId);
             }
             $order = new WC_Order( $orderId );
+            $order->calculate_totals();
 
             if ( ! $order->get_meta( 'tm_clickid' ) ) {
                 // This order has no clickid, don't send the postback
@@ -300,6 +301,8 @@ class TrafficManagerWc_Integration extends WC_Integration {
             if (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
                 $url .= '&approve=0';
             }
+
+            $url .= '&pb_source=wc-plugin';
 
             // Send the postback
             $response = wp_remote_get( $url );
