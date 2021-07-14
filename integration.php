@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.4
+ * Version: 1.2.5
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -288,7 +288,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $url = str_replace( '{transaction_id}', $orderId, $url );
             $url = str_replace( '{amount}', $order->get_subtotal(), $url );
 
-            if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes' && $status != 'new_order') {
+            if (isset($this->settings['order_status']) && 'wc-' . $status == $this->settings['order_status']) {
                 $url .= '&approve=1';
             }
 
