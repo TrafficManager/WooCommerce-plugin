@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.3
+ * Version: 1.2.4
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -34,11 +34,6 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 		add_action( 'wp_footer', array( $this, 'set_cookie' ) );
 
-        // Send the postback when the order is received
-        add_action( 'woocommerce_new_order', array(
-            $this,
-            'action_woocommerce_new_order'
-        ), 10, 1 );
 
         add_action( 'woocommerce_order_status_changed', array(
             $this,
@@ -46,7 +41,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
         ), 10, 1 );
 
 
-		// Check cookie when the order is made
+		// Check cookie when the order is made and send postback
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'add_cookie_to_order' ) );
 	}
 
@@ -63,6 +58,12 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			$tm_clickid = sanitize_text_field( $_COOKIE['tm_clickid'] );
 			update_post_meta( $order_id, 'tm_clickid', $tm_clickid );
 		}
+
+        $status = 'new_order';
+
+        if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
+            $this->postback($order_id, $status);
+        }
 	}
 
 	/**
@@ -259,10 +260,6 @@ class TrafficManagerWc_Integration extends WC_Integration {
             return;
         }
 
-        if ($status == 'new_order' && isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
-            $this->postback($orderId, $status);
-        }
-
         if (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
             $this->postback($orderId, $status);
         }
@@ -276,11 +273,8 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
     private function postback($orderId, $status) {
         try {
-            if ($status == 'new_order') {
-                $this->add_cookie_to_order($orderId);
-            }
+
             $order = new WC_Order( $orderId );
-            $order->calculate_totals();
 
             if ( ! $order->get_meta( 'tm_clickid' ) ) {
                 // This order has no clickid, don't send the postback
