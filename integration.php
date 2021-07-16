@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.5
+ * Version: 1.2.7
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -57,13 +57,11 @@ class TrafficManagerWc_Integration extends WC_Integration {
 		if ( isset( $_COOKIE['tm_clickid'] ) && preg_match( '/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}$/', $_COOKIE['tm_clickid'] ) ) {
 			$tm_clickid = sanitize_text_field( $_COOKIE['tm_clickid'] );
 			update_post_meta( $order_id, 'tm_clickid', $tm_clickid );
+
+			if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
+				$this->postback($order_id, 'new_order', $tm_clickid);
+			}
 		}
-
-        $status = 'new_order';
-
-        if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
-            $this->postback($order_id, $status);
-        }
 	}
 
 	/**
@@ -271,20 +269,24 @@ class TrafficManagerWc_Integration extends WC_Integration {
         }
     }
 
-    private function postback($orderId, $status) {
+    private function postback($orderId, $status, $clickId = null) {
         try {
 
             $order = new WC_Order( $orderId );
 
-            if ( ! $order->get_meta( 'tm_clickid' ) ) {
-                // This order has no clickid, don't send the postback
-                error_log( "No clickId");
-                return;
+            if(is_null($clickId) && $order->get_meta( 'tm_clickid' )) {
+                $clickId = $order->get_meta( 'tm_clickid' );
             }
+
+	        if ( ! $clickId ) {
+		        // This order has no clickid, don't send the postback
+		        error_log( "No clickId" );
+		        return;
+	        }
 
             // Build the url
             $url = $this->settings['postbackUrl'];
-            $url = str_replace( '{clickid}', $order->get_meta( 'tm_clickid' ), $url );
+            $url = str_replace( '{clickid}', $clickId, $url );
             $url = str_replace( '{transaction_id}', $orderId, $url );
             $url = str_replace( '{amount}', $order->get_subtotal(), $url );
 
