@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.8
+ * Version: 1.3.0
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -109,7 +109,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
 					$this->settings['username']    = $apiResponse['username'];
 					$this->settings['postbackUrl'] = $apiResponse['postbackUrl'];
 				} else {
-					WC_Admin_Settings::add_error( 'Error occurred: ' . ( $apiResponse['message'] ?? 'unknown error' ) );
+					WC_Admin_Settings::add_error( 'Error occurred: ' . ( isset($apiResponse['message']) ? $apiResponse['message'] : 'unknown error' ) );
 				}
 			}
 		} else {
@@ -180,6 +180,11 @@ class TrafficManagerWc_Integration extends WC_Integration {
                 'default'     => self::DEFAULT_CANCEL_STATUS,
                 'options'     => array_merge(["" => "Select an option"] , wc_get_order_statuses())
             ),
+            'pay_upsells'    => array(
+                'label'       => __( 'Pay upsells', 'trafficmanager-plugin' ),
+                'type'        => 'checkbox',
+                'desc_tip'    => true,
+            ),
 
 			'info' => array(
 				//'title'             => __( 'TrafficManager network info', 'trafficmanager-plugin' ),
@@ -249,7 +254,10 @@ class TrafficManagerWc_Integration extends WC_Integration {
     }
 
     public function action_woocommerce_update_order ($orderId) {
-        $this->postback($orderId, 'new_order');
+
+        if (isset($this->settings['pay_upsells']) && $this->settings['pay_upsells'] == 'yes') {
+            $this->postback($orderId, 'new_order');
+        }
     }
 
     /**
