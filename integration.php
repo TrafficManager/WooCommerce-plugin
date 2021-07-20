@@ -182,6 +182,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
             ),
             'pay_upsells'    => array(
                 'label'       => __( 'Pay upsells', 'trafficmanager-plugin' ),
+                'description' => __( 'If you enable this option, additional conversions will be fired when the order is edited after being submitted, and the order total is increased. For this feature to work, the option "Allow multiple conversions for the same clickid" must be enabled in the offer settings.', 'trafficmanager-plugin' ),
                 'type'        => 'checkbox',
                 'desc_tip'    => true,
             ),
