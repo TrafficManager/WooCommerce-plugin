@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.2.7
+ * Version: 1.2.8
  * Traffic Manager Limited
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -38,6 +38,11 @@ class TrafficManagerWc_Integration extends WC_Integration {
         add_action( 'woocommerce_order_status_changed', array(
             $this,
             'action_woocommerce_order_status_changed',
+        ), 10, 1 );
+
+        add_action( 'woocommerce_update_order', array(
+            $this,
+            'action_woocommerce_update_order',
         ), 10, 1 );
 
 
@@ -241,6 +246,10 @@ class TrafficManagerWc_Integration extends WC_Integration {
     public function action_woocommerce_order_status_changed($orderId) {
         $order = new WC_Order( $orderId );
         $this->sendPostback($orderId, $order->get_status());
+    }
+
+    public function action_woocommerce_update_order ($orderId) {
+        $this->postback($orderId, 'new_order');
     }
 
     /**
