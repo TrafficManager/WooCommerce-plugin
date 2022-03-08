@@ -302,6 +302,8 @@ class TrafficManagerWc_Integration extends WC_Integration {
 		        return;
 	        }
 
+            $isPendingEnabled = isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes';
+
             // Build the url
             $url = $this->settings['postbackUrl'];
             $url = str_replace( '{clickid}', $clickId, $url );
@@ -309,11 +311,18 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $url = str_replace( '{amount}', $order->get_subtotal(), $url );
 
             if (isset($this->settings['order_status']) && 'wc-' . $status == $this->settings['order_status']) {
-                $url .= '&approve=1';
-            }
-
-            if (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
-                $url .= '&approve=0';
+                if ($isPendingEnabled) {
+	                $url .= '&approve=1';
+                }
+            } elseif (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
+                if ($isPendingEnabled) {
+	                $url .= '&approve=0';
+                } else {
+                    return;
+                }
+            } else {
+                // No postback to be sent
+                return;
             }
 
             $url .= '&pb_source=wc-plugin';
