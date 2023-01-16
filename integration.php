@@ -3,8 +3,8 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.3.1
- * Traffic Manager Limited
+ * Version: 1.3.2
+ * Traffic Manager Group SRL
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
 class TrafficManagerWc_Integration extends WC_Integration {
