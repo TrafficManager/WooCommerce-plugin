@@ -27,12 +27,13 @@ class TrafficManagerWc_Integration extends WC_Integration {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		// Save settings if the we are in the right section
+		// Save settings if we are in the right section
 		if ( isset( $_POST['section'] ) && $this->id === $_POST['section'] ) {
 			add_action( 'woocommerce_update_options_integration', array( $this, 'process_admin_options' ) );
 		}
 
 		add_action( 'wp_footer', array( $this, 'set_cookie' ) );
+		add_action( 'woocommerce_add_to_cart', array( $this, 'add_to_cart' ) );
 
 
         add_action( 'woocommerce_order_status_changed', array(
@@ -68,6 +69,18 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			}
 		}
 	}
+
+	/**
+	 * This handles cases when a product is directly added to card from a tracking link, for example from a pre-landing, and the user lands on an url such as:
+     * /?add-to-cart=29&tmclk=TM8e1b53e6e4458dc4a49d2278f81869fa
+     * And a redirect is made immediately, so js code is not executed, we need to set the cookie server-side
+	 */
+    function add_to_cart() {
+	    if ( isset($_GET['tmclk']) && preg_match( '/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}$/', $_GET['tmclk'] ) ) {
+		    $ttl = isset( $this->settings['cookie_ttl'] ) ? $this->settings['cookie_ttl'] : self::DEFAULT_TTL;
+            setcookie('tm_clickid', $_GET['tmclk'], time() + $ttl, '/');
+        }
+    }
 
 	/**
 	 * Processes and saves options.
