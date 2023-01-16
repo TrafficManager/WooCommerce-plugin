@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.3.2
+ * Version: 1.3.3
  * Traffic Manager Group SRL
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
