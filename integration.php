@@ -163,6 +163,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			),
             'send_pending_conv'    => array(
                 'label'       => __( 'Send pending conversion when the order is received', 'trafficmanager-plugin' ),
+                'description' => __( 'Send a pending conversion as soon as the order is made. For this feature to work properly, the option "Allow multiple conversions for the same clickid" must be enabled in the offer settings.', 'trafficmanager-plugin' ),
                 'type'        => 'checkbox',
                 'desc_tip'    => true,
             ),
