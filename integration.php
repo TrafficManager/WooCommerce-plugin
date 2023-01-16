@@ -72,8 +72,8 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 	/**
 	 * This handles cases when a product is directly added to card from a tracking link, for example from a pre-landing, and the user lands on an url such as:
-     * /?add-to-cart=29&tmclk=TM8e1b53e6e4458dc4a49d2278f81869fa
-     * And a redirect is made immediately, so js code is not executed, we need to set the cookie server-side
+	 * /?add-to-cart=29&tmclk=TM8e1b53e6e4458dc4a49d2278f81869fa
+	 * And a redirect is made immediately, so js code is not executed, we need to set the cookie server-side
 	 */
     function add_to_cart() {
 	    if ( isset($_GET['tmclk']) && preg_match( '/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}$/', $_GET['tmclk'] ) ) {
