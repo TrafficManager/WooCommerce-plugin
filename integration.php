@@ -318,11 +318,17 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
             $isPendingEnabled = isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes';
 
+	        $orderAmount = $order->get_subtotal();
+	        $discountTotal = $order->get_total_discount();
+	        if ( $discountTotal ) {
+		        $orderAmount = $orderAmount - $discountTotal;
+	        }
+
             // Build the url
             $url = $this->settings['postbackUrl'];
             $url = str_replace( '{clickid}', $clickId, $url );
             $url = str_replace( '{transaction_id}', $orderId, $url );
-            $url = str_replace( '{amount}', $order->get_subtotal(), $url );
+            $url = str_replace( '{amount}', $orderAmount, $url );
 
 	        if ( $status == 'new_order' && $isPendingEnabled ) {
 		        // The postback must be sent, without 'approve' parameter
