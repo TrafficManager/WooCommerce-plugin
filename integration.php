@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.3.3
+ * Version: 1.3.4
  * Traffic Manager Group SRL
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -306,9 +306,9 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
             $order = new WC_Order( $orderId );
 
-            if(is_null($clickId) && $order->get_meta( 'tm_clickid' )) {
-                $clickId = $order->get_meta( 'tm_clickid' );
-            }
+	        if ( is_null( $clickId ) && $order->get_meta( 'tm_clickid' ) ) {
+		        $clickId = $order->get_meta( 'tm_clickid' );
+	        }
 
 	        if ( ! $clickId ) {
 		        // This order has no clickid, don't send the postback
@@ -324,7 +324,9 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $url = str_replace( '{transaction_id}', $orderId, $url );
             $url = str_replace( '{amount}', $order->get_subtotal(), $url );
 
-            if (isset($this->settings['order_status']) && 'wc-' . $status == $this->settings['order_status']) {
+	        if ( $status == 'new_order' && $isPendingEnabled ) {
+		        // The postback must be sent, without 'approve' parameter
+	        } elseif ( isset( $this->settings['order_status'] ) && 'wc-' . $status == $this->settings['order_status'] ) {
                 if ($isPendingEnabled) {
 	                $url .= '&approve=1';
                 }
