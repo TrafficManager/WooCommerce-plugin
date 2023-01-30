@@ -194,12 +194,20 @@ class TrafficManagerWc_Integration extends WC_Integration {
                 'default'     => self::DEFAULT_CANCEL_STATUS,
                 'options'     => array_merge(["" => "Select an option"] , wc_get_order_statuses())
             ),
-            'pay_upsells'    => array(
-                'label'       => __( 'Pay upsells', 'trafficmanager-plugin' ),
-                'description' => __( 'If you enable this option, additional conversions will be fired when the order is edited after being submitted, and the order total is increased. For this feature to work, the option "Allow multiple conversions for the same clickid" must be enabled in the offer settings.', 'trafficmanager-plugin' ),
-                'type'        => 'checkbox',
-                'desc_tip'    => true,
-            ),
+			'pay_upsells'    => array(
+				'label'       => __( 'Pay upsells', 'trafficmanager-plugin' ),
+				'description' => __( 'If you enable this option, additional conversions will be fired when the order is edited after being submitted, and the order total is increased. For this feature to work, the option "Allow multiple conversions for the same clickid" must be enabled in the offer settings.', 'trafficmanager-plugin' ),
+				'type'        => 'checkbox',
+				'desc_tip'    => true,
+			),
+			'leads_mode'    => array(
+				'title'       => __( 'Enable leads mode - read description<br>When enabled, all the other settings on this page are not relevant.', 'trafficmanager-plugin' ),
+				'label'       => __( 'Enable leads mode (BETA)', 'trafficmanager-plugin' ),
+				'description' => __( 'This requires the "Offer products and leads management" feature to be enabled in your TrafficManager network. '
+				                     . 'If you enable this option, the order data will be sent to TrafficManager as a lead. Use this option to handle the orders through TrafficManager or with an integrated CRM. ', 'trafficmanager-plugin' ),
+				'type'        => 'checkbox',
+				'desc_tip'    => true,
+			),
 
 			'info' => array(
 				//'title'             => __( 'TrafficManager network info', 'trafficmanager-plugin' ),
@@ -265,6 +273,12 @@ class TrafficManagerWc_Integration extends WC_Integration {
      */
     public function action_woocommerce_order_status_changed($orderId) {
         $order = new WC_Order( $orderId );
+
+	    if ( isset( $this->settings['leads_mode'] ) && $this->settings['leads_mode'] == 'yes' ) {
+		    $this->sendLead( $orderId );
+            return;
+	    }
+
         $this->sendPostback($orderId, $order->get_status());
     }
 
@@ -275,14 +289,24 @@ class TrafficManagerWc_Integration extends WC_Integration {
         }
     }
 
-    /**
-     * Sends the S2S postback
-     *
-     * @param $orderId
-     */
-    public function action_woocommerce_new_order( $orderId ) {
-        $this->sendPostback($orderId, 'new_order');
-    }
+	private function sendLead( $orderId ) {
+		// Parse the postback url to get the postback domain and key
+		$postbackUrl = parse_url( $this->settings['postbackUrl'] );
+
+		if ( ! $postbackUrl ) {
+			return;
+		}
+
+		$order = new WC_Order( $orderId );
+
+		parse_str( $postbackUrl['query'], $args );
+
+		wp_remote_post( 'https://' . $postbackUrl['host'] . '/lead/woocommerce/?key=' . $args['key'], array(
+			'body' => array(
+				'data' => json_encode( $order->get_data() )
+			)
+		) );
+	}
 
 
     private function sendPostback($orderId, $status) {
@@ -301,7 +325,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
         }
     }
 
-    private function postback($orderId, $status, $clickId = null) {
+	private function postback( $orderId, $status, $clickId = null ) {
         try {
 
             $order = new WC_Order( $orderId );
