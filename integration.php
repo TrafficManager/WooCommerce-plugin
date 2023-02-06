@@ -303,12 +303,19 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			$items[] = (array) $item;
 		}
 
+		$orderAmount = $order->get_subtotal();
+		$totalDiscount = $order->get_total_discount();
+		if ( $totalDiscount ) {
+			$orderAmount = $orderAmount - $totalDiscount;
+		}
+
 		parse_str( $postbackUrl['query'], $args );
 
 		wp_remote_post( 'https://' . $postbackUrl['host'] . '/lead/woocommerce/?key=' . $args['key'], array(
 			'body' => array(
 				'data' => json_encode( $order->get_data() ),
-				'items' => json_encode( json_encode($items) )
+				'items'  => json_encode( json_encode( $items ) ),
+				'amount' => $orderAmount
 			)
 		) );
 	}
@@ -348,9 +355,9 @@ class TrafficManagerWc_Integration extends WC_Integration {
             $isPendingEnabled = isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes';
 
 	        $orderAmount = $order->get_subtotal();
-	        $discountTotal = $order->get_total_discount();
-	        if ( $discountTotal ) {
-		        $orderAmount = $orderAmount - $discountTotal;
+	        $totalDiscount = $order->get_total_discount();
+	        if ( $totalDiscount ) {
+		        $orderAmount = $orderAmount - $totalDiscount;
 	        }
 
             // Build the url
