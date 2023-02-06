@@ -298,12 +298,17 @@ class TrafficManagerWc_Integration extends WC_Integration {
 		}
 
 		$order = new WC_Order( $orderId );
+		$items = [];
+		foreach ( $order->get_items() as $item ) {
+			$items[] = (array) $item;
+		}
 
 		parse_str( $postbackUrl['query'], $args );
 
 		wp_remote_post( 'https://' . $postbackUrl['host'] . '/lead/woocommerce/?key=' . $args['key'], array(
 			'body' => array(
-				'data' => json_encode( $order->get_data() )
+				'data' => json_encode( $order->get_data() ),
+				'items' => json_encode( json_encode($items) )
 			)
 		) );
 	}
