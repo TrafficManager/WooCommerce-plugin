@@ -313,8 +313,8 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 		wp_remote_post( 'https://' . $postbackUrl['host'] . '/lead/woocommerce/?key=' . $args['key'], array(
 			'body' => array(
-				'data' => json_encode( $order->get_data() ),
-				'items'  => json_encode( json_encode( $items ) ),
+				'data'   => json_encode( $order->get_data() ),
+				'items'  => json_encode( $items ),
 				'amount' => $orderAmount
 			)
 		) );
