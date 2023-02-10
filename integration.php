@@ -201,7 +201,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
 				'desc_tip'    => true,
 			),
 			'leads_mode'    => array(
-				'title'       => __( 'Enable leads mode - read description<br>When enabled, all the other settings on this page are not relevant.', 'trafficmanager-plugin' ),
+				'title'       => __( 'Enable leads mode - read description', 'trafficmanager-plugin' ),
 				'label'       => __( 'Enable leads mode (BETA)', 'trafficmanager-plugin' ),
 				'description' => __( 'This requires the "Offer products and leads management" feature to be enabled in your TrafficManager network. '
 				                     . 'If you enable this option, the order data will be sent to TrafficManager as a lead. Use this option to handle the orders through TrafficManager or with an integrated CRM. ', 'trafficmanager-plugin' ),
@@ -275,7 +275,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
         $order = new WC_Order( $orderId );
 
 	    if ( isset( $this->settings['leads_mode'] ) && $this->settings['leads_mode'] == 'yes' ) {
-		    $this->sendLead( $orderId );
+		    $this->sendLead( $order );
             return;
 	    }
 
@@ -289,7 +289,9 @@ class TrafficManagerWc_Integration extends WC_Integration {
         }
     }
 
-	private function sendLead( $orderId ) {
+	private function sendLead( $order ) {
+        /** @var WC_Order $order */
+
 		// Parse the postback url to get the postback domain and key
 		$postbackUrl = parse_url( $this->settings['postbackUrl'] );
 
@@ -297,7 +299,6 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			return;
 		}
 
-		$order = new WC_Order( $orderId );
 		$items = [];
 		foreach ( $order->get_items() as $item ) {
 			$items[] = (array) $item;
@@ -311,30 +312,37 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 		parse_str( $postbackUrl['query'], $args );
 
+		$status = $order->get_status();
+
+		if ( isset( $this->settings['send_canceled_conv'] ) && 'wc-' . $status == $this->settings['send_canceled_conv'] ) {
+			$action = 'cancel';
+		} elseif ( isset( $this->settings['order_status'] ) && 'wc-' . $status == $this->settings['order_status'] ) {
+			$action = 'confirm';
+		} else {
+			$action = '';
+		}
+
 		wp_remote_post( 'https://' . $postbackUrl['host'] . '/lead/woocommerce/?key=' . $args['key'], array(
 			'body' => array(
 				'data'   => json_encode( $order->get_data() ),
 				'items'  => json_encode( $items ),
-				'amount' => $orderAmount
+				'amount' => $orderAmount,
+                'action' => $action,
 			)
 		) );
 	}
 
 
-    private function sendPostback($orderId, $status) {
+	private function sendPostback( $orderId, $status ) {
         if (!isset( $this->settings['postbackUrl'] ) ) {
             return;
         }
 
-        if (isset($this->settings['send_canceled_conv']) && 'wc-' . $status == $this->settings['send_canceled_conv']) {
-            $this->postback($orderId, $status);
-        }
-
-        if (isset($this->settings['order_status'])) {
-            if ('wc-' . $status == $this->settings['order_status']){
-                $this->postback($orderId, $status);
-            }
-        }
+	    if ( isset( $this->settings['send_canceled_conv'] ) && 'wc-' . $status == $this->settings['send_canceled_conv'] ) {
+		    $this->postback( $orderId, $status );
+	    } elseif ( isset( $this->settings['order_status'] ) && 'wc-' . $status == $this->settings['order_status'] ) {
+		    $this->postback( $orderId, $status );
+	    }
     }
 
 	private function postback( $orderId, $status, $clickId = null ) {
