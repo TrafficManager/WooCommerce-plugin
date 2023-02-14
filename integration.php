@@ -64,7 +64,13 @@ class TrafficManagerWc_Integration extends WC_Integration {
 			$tm_clickid = sanitize_text_field( $_COOKIE['tm_clickid'] );
 			update_post_meta( $order_id, 'tm_clickid', $tm_clickid );
 
-			if (isset($this->settings['send_pending_conv']) && $this->settings['send_pending_conv'] == 'yes') {
+			if ( isset( $this->settings['leads_mode'] ) && $this->settings['leads_mode'] == 'yes' ) {
+                // If leads mode is enabled, don't send pending postback
+                return;
+            }
+
+			if ( isset( $this->settings['send_pending_conv'] ) && $this->settings['send_pending_conv'] == 'yes' ) {
+                // Send the conversion postback if 'send_pending_conv' is enabled (and not in leads mode)
 				$this->postback($order_id, 'new_order', $tm_clickid);
 			}
 		}
