@@ -290,6 +290,11 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
     public function action_woocommerce_update_order ($orderId) {
 
+	    if ( isset( $this->settings['leads_mode'] ) && $this->settings['leads_mode'] == 'yes' ) {
+		    $this->sendLead( $order );
+		    return;
+	    }
+
         if (isset($this->settings['pay_upsells']) && $this->settings['pay_upsells'] == 'yes') {
             $this->postback($orderId, 'new_order');
         }
