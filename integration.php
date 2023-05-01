@@ -3,7 +3,7 @@
 /**
  * Class TrafficManagerWc_Integration
  *
- * Version: 1.4.3
+ * Version: 1.4.4
  * Traffic Manager Group SRL
  * https://www.trafficmanager.com/woocommerce-plugin/
  */
@@ -291,6 +291,7 @@ class TrafficManagerWc_Integration extends WC_Integration {
     public function action_woocommerce_update_order ($orderId) {
 
 	    if ( isset( $this->settings['leads_mode'] ) && $this->settings['leads_mode'] == 'yes' ) {
+		    $order = new WC_Order( $orderId );
 		    $this->sendLead( $order );
 		    return;
 	    }
