@@ -1,8 +1,8 @@
 === TrafficManager WC ===
 Contributors: trafficmanager
 Tags: trafficmanager, trafficmanager.com, woocommerce, postback, affiliate postback
-Requires at least: 4.7
-Tested up to: 6.2
+Requires at least: 5.0
+Tested up to: 6.8
 Requires PHP: 5.6
 License: GPL3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
