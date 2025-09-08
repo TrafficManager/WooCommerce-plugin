@@ -49,6 +49,12 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
 		// Check cookie when the order is made and send postback
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'add_cookie_to_order' ) );
+
+        // Safety net if an order slipped through without meta
+        add_action( 'woocommerce_thankyou', array( $this, 'handle_missing_clickid' ) );
+
+        // Display the clickid in the order admin page
+        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'display_clickid_in_admin' ) );
 	}
 
 	/**
@@ -415,6 +421,31 @@ class TrafficManagerWc_Integration extends WC_Integration {
 
         } catch ( Exception $ex ) {
             error_log( $ex->getMessage() );
+        }
+    }
+
+    public function handle_missing_clickid( $order_id ) {
+        if ( ! $order_id ) {
+            return;
+        }
+        $order = wc_get_order( $order_id );
+        if ( $order && ! $order->get_meta( 'tm_clickid' ) && isset( $_COOKIE['tm_clickid'] ) &&
+             preg_match( '/^[A-Z][A-Z][A-Z]?[0-9a-f]{32}$/', $_COOKIE['tm_clickid'] ) ) {
+            $order->update_meta_data( 'tm_clickid', sanitize_text_field( $_COOKIE['tm_clickid'] ) );
+            $order->save();
+        }
+    }
+
+    public function display_clickid_in_admin( $order ) {
+        $clickid = $order->get_meta( 'tm_clickid' );
+        $lead_id = $order->get_meta( 'tm_lead_id' );
+        if ( $lead_id ) {
+            echo '<p class="form-field"><strong>TM lead ID:</strong> ' . esc_html( $lead_id ) . '</p>';
+            if ( $clickid ) {
+                echo '<p class="form-field"><strong>TM clickid:</strong> ' . esc_html( $clickid ) . '</p>';
+            }
+        } else {
+            echo '<p class="form-field"><strong>TM clickid:</strong> ' . ( $clickid ? esc_html( $clickid ) : 'missing' ) . '</p>';
         }
     }
 }
